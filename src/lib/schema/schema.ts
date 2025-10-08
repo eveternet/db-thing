@@ -54,7 +54,7 @@ export class Schema {
             return [false, "Failed FK Pairs Exist"];
           }
           for (const pair of reference.pairs) {
-            if (!this.validateFkReferenceTableExists(pair, reference)) {
+            if (!this.validateFkReferenceTableExists(reference)) {
               return [false, "Failed FK Reference Table Exists"];
             }
             if (!this.validateFkReferenceColumnExists(pair, reference)) {
@@ -187,7 +187,7 @@ export class Schema {
     return true;
   }
 
-  private validateFkReferenceTableExists(pair: Pair, reference: ForeignKey): boolean {
+  private validateFkReferenceTableExists(reference: ForeignKey): boolean {
     let tableNames: string[] = this.tables.map((table) => table.name);
     if (!tableNames.includes(reference.targetTable)) {
       return false;
