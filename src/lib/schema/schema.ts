@@ -1,36 +1,17 @@
-// This is the class for schemas
-export type DataType = "number" | "text" | "boolean" | "date" | "uuid" | "jsonb";
-
-export type Pair = {
-  local: string;
-  away: string;
-};
-
-export type ForeignKey = {
-  targetTable: string; // which table this FK targets
-  pairs: Pair[]; // Composite then just have more than 1 value in array, else dont :)
-  onDelete?: "CASCADE" | "SET NULL" | "NO ACTION" | "RESTRICT";
-  onUpdate?: "CASCADE" | "NO ACTION" | "RESTRICT";
-};
-
-export type Column = {
-  name: string;
-  type: DataType;
-  unique?: boolean;
-  default?: string | number | boolean;
-};
-
-export type Table = {
-  name: string;
-  columns: Column[];
-  pk?: string | string[];
-  references?: ForeignKey[];
-  metadata?: Record<string, unknown>;
-};
+import { DataType, Table, ForeignKey, Pair } from "../types";
+import { validateType } from "../datatype_validator";
 
 export class Schema {
   private tables: Table[];
-  private dataTypeArray: DataType[] = ["number", "text", "boolean", "date", "uuid", "jsonb"];
+  private dataTypeArray: DataType[] = [
+    "number",
+    "text",
+    "boolean",
+    "date",
+    "uuid",
+    "jsonb",
+    "time",
+  ];
   constructor(schmea: Table[]) {
     this.tables = schmea;
   }
@@ -63,6 +44,9 @@ export class Schema {
       }
       if (!this.validateUniqueOnlyInScalarColumns(table)) {
         return [false, "Failed Unique Only In Scalar Columns"];
+      }
+      if (!this.validateDefaultTypecheck(table)) {
+        return [false, "Default failed typecheck"];
       }
       if (table.references) {
         for (const reference of table.references) {
@@ -166,10 +150,31 @@ export class Schema {
   }
 
   private validateUniqueOnlyInScalarColumns(table: Table): boolean {
-    let nonScalarTypes: DataType[] = ["boolean"];
+    let nonScalarTypes: DataType[] = ["boolean", "date", "time"];
     for (const column of table.columns) {
       if (column.unique && nonScalarTypes.includes(column.type)) {
         return false;
+      }
+    }
+    return true;
+  }
+
+  private validateDefaultTypecheck(table: Table): boolean {
+    for (const column of table.columns) {
+      if (column.default) {
+        if (column.type === "uuid") {
+          // Check 1: If bool
+          if (typeof column.default === "boolean") {
+            return true;
+          }
+          // Check 2: Ruling out the third option
+          if (typeof column.default === "number") {
+            return false;
+          }
+          return validateType("uuid", column.default);
+        } else {
+          return validateType(column.type, column.default);
+        }
       }
     }
     return true;
