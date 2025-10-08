@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DB-Thing - A ORM and DBMS Built into 1 Next.js Project
 
-## Getting Started
+No, this shouldn't be a next.js project.
+No, this isn't necessary.
+No, this isn't useful.
 
-First, run the development server:
+This is my little experiment that I am starting to build that began with
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+> "What if I made a DBMS that doesn't use strings as its syntax?"
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+While that is the core idea of this project, I also threw in a few of my own ideas in this project.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Since this is function based, I can make this both an ORM and DBMS - The functions are the same so I can effectively "expose" it to the ORM.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Next steps for DB-Thing:
 
-## Learn More
+- [ ] Deeper testing for `Schema.validateSchema()` -- Current tests only indicate this works for base cases
+- [ ] Creating migrations for the schema and creating files for the DBMS to read and write
+- [ ] Creating secondary indexes to allow the faster read of data
+- [ ] Creating integrity systems to ensure both the main and secondary indexes are accurate
+- [ ] Creating read systems using functions - mimicing SQL functions like `SELECT`, `WHERE` and SQL operators
+- [ ] Create write and delete systems like SQL `WRITE` and `DELETE`
+- [ ] Convert it into an API for DB-Thing as a Service (fellow joke project for db hosting)?
 
-To learn more about Next.js, take a look at the following resources:
+## To run what exists (why would you)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Clone the project
+2. Do `pnpm install` (we have like 1 non-base next dependecy)
+3. Do `pnpm test` or `pnpm test --watch` to run my 1 test file and see a all tests pass
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License (is this how a readme is supposed to flow?)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+None - why would you want to use it.
+I suppose the license is do whatever you want with my files - I don't care
