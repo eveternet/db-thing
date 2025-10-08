@@ -17,7 +17,7 @@ export type Column = {
   name: string;
   type: DataType;
   unique?: boolean;
-  default?: unknown;
+  default?: string | number | boolean;
 };
 
 export type Table = {
