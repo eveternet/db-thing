@@ -1,5 +1,5 @@
 // This is the class for schemas
-export type DataType = "integer" | "float" | "text" | "boolean" | "date" | "uuid" | "jsonb";
+export type DataType = "number" | "text" | "boolean" | "date" | "uuid" | "jsonb";
 
 export type Pair = {
   local: string;
@@ -30,15 +30,7 @@ export type Table = {
 
 export class Schema {
   private tables: Table[];
-  private dataTypeArray: DataType[] = [
-    "integer",
-    "float",
-    "text",
-    "boolean",
-    "date",
-    "uuid",
-    "jsonb",
-  ];
+  private dataTypeArray: DataType[] = ["number", "text", "boolean", "date", "uuid", "jsonb"];
   constructor(schmea: Table[]) {
     this.tables = schmea;
   }
@@ -174,7 +166,7 @@ export class Schema {
   }
 
   private validateUniqueOnlyInScalarColumns(table: Table): boolean {
-    let nonScalarTypes = ["boolean"];
+    let nonScalarTypes: DataType[] = ["boolean"];
     for (const column of table.columns) {
       if (column.unique && nonScalarTypes.includes(column.type)) {
         return false;
