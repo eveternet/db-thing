@@ -1,6 +1,5 @@
-# DB-Thing - A ORM and DBMS Built into 1 Next.js Project
+# DB-Thing - A ORM and DBMS Built into 1 Project
 
-No, this shouldn't be a next.js project.
 No, this isn't necessary.
 No, this isn't useful.
 
