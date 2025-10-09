@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { Schema } from "./schema";
-import { Table } from "../types";
+import { Table, Column } from "../types";
 
 // Base Case Schemas: Tests all pass
 
@@ -93,67 +93,350 @@ const baseCaseSchemaOne: Table[] = [
   },
 ];
 
+const circularBaseCase: Table[] = [
+  {
+    name: "table1",
+    columns: [
+      {
+        name: "one",
+        type: "text",
+      },
+      {
+        name: "two",
+        type: "text",
+      },
+    ],
+    references: [
+      {
+        targetTable: "table3",
+        pairs: [
+          {
+            local: "two",
+            away: "one",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: "table2",
+    columns: [
+      {
+        name: "one",
+        type: "text",
+      },
+      {
+        name: "two",
+        type: "text",
+      },
+    ],
+    references: [
+      {
+        targetTable: "table1",
+        pairs: [
+          {
+            local: "two",
+            away: "one",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: "table3",
+    columns: [
+      {
+        name: "one",
+        type: "text",
+      },
+      {
+        name: "two",
+        type: "text",
+      },
+    ],
+    references: [
+      {
+        targetTable: "table2",
+        pairs: [
+          {
+            local: "two",
+            away: "one",
+          },
+        ],
+      },
+    ],
+  },
+];
+
 function cloneSchema(tables: Table[]): Table[] {
   return JSON.parse(JSON.stringify(tables));
 }
 
 // Alternative test cases lets go!
+type testCase = {
+  name: string;
+  schema: Table[] | (() => Table[]);
+  result: [boolean, string];
+};
 
-// No Tables
-const altSchemaOne: Table[] = [];
+let testCases: testCase[] = [];
 
-// Duplicate table names
-let altSchemaTwo: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaTwo[1].name = "Users";
+testCases.push({
+  name: "Base Case",
+  schema: baseCaseSchemaOne,
+  result: [true, "Success!"],
+});
 
-// Table Name Rules (No Space)
-let altSchemaThree: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaThree[0].name = "Us ers";
+testCases.push({
+  name: "No Tables Test",
+  schema: [],
+  result: [false, "Failed Tables Exist"],
+});
 
-// No Reserved Names -- 1
-let altSchemaFour: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaFour[0].name = "_table";
+testCases.push({
+  name: "Duplicate Table Names Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[1].name = "Users";
+    return s;
+  },
+  result: [false, "Failed No Duplicate Table Names"],
+});
 
-// No Reserved Names -- 2
-let altSchemaFive: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaFive[0].columns[0].name = "_pk";
+testCases.push({
+  name: "Table Name Rules Test 1 - Space in Table Name Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].name = "Us ers";
+    return s;
+  },
+  result: [false, "Failed Table Names Rules"],
+});
 
-// Column Types
-let altSchemaSix: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaSix[0].columns[0].type = "booleann" as any;
+testCases.push({
+  name: "Table Name Rules Test 2 - Reserved in Table Name Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].name = "_table";
+    s[2].references![0].targetTable = "_table";
+    return s;
+  },
+  result: [false, "Failed Table Names Rules"],
+});
 
-// Table has Columns
-let altSchemaSeven: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaSeven[0].columns = [];
+testCases.push({
+  name: "Table has Columns Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns = [];
+    return s;
+  },
+  result: [false, "Failed Table Has Columns"],
+});
 
-// Duplicate Column Names
-let altSchemaEight: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaEight[0].columns[1].name = "user_id";
+testCases.push({
+  name: "Invalid Column Type Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[0].type = "booleann" as any;
+    return s;
+  },
+  result: [false, "Failed Column Types"],
+});
 
-// PK Exists
-let altSchemaNine: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaNine[0].pk = "usered_id";
+testCases.push({
+  name: "Column Name Rules Test 1 - Space in Column Name Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[1].name = "tablenfeiwof fewino";
+    return s;
+  },
+  result: [false, "Failed Column Name Rules"],
+});
 
-// Unique only in scalar columns
-let altSchemaTen: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaTen[0].columns[3].unique = true;
+testCases.push({
+  name: "Column Name Rules Test 2 - Reserved in Column Name Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[1].name = "_pk";
+    return s;
+  },
+  result: [false, "Failed Column Name Rules"],
+});
 
-// FK Pairs must exist
-let altSchemaEleven: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaEleven[2].references![0].pairs = [];
+testCases.push({
+  name: "Duplicate Column Names Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[1].name = "user_id";
+    return s;
+  },
+  result: [false, "Failed No Duplicate Column Names"],
+});
 
-// Validate FK Reference Table Exists
-let altSchemaTwelve: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaTwelve.reverse().pop();
+testCases.push({
+  name: "PK Reference Exists Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].pk = "usered_id";
+    return s;
+  },
+  result: [false, "Failed PK Reference"],
+});
 
-// Validate FK Reference Table Exists
-let altSchemaThirteen: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaThirteen[0].columns.reverse().pop();
-altSchemaThirteen[0].pk = "";
+testCases.push({
+  name: "PK is using Scalar Values Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[0].type = "boolean";
+    return s;
+  },
+  result: [false, "Failed PK Scalable"],
+});
 
-// FK Reference and Local Type should be the same
-let altSchemaFourteen: Table[] = cloneSchema(baseCaseSchemaOne);
-altSchemaFourteen[0].columns[0].type = "uuid";
+testCases.push({
+  name: "PK Composite with 0 Values Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].pk = [];
+    return s;
+  },
+  result: [false, "Failed Comp PK Test"],
+});
+
+testCases.push({
+  name: "PK Composite No Duplicates Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].pk = ["user_id", "user_id"];
+    return s;
+  },
+  result: [false, "Failed No Duplicate in Composite PK"],
+});
+
+testCases.push({
+  name: "Unique Scalable Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[3].unique = true;
+    return s;
+  },
+  result: [false, "Failed Unique Only In Scalar Columns"],
+});
+
+testCases.push({
+  name: "Default Correct Type Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[3].default = "true";
+    return s;
+  },
+  result: [false, "Failed default typecheck"],
+});
+
+testCases.push({
+  name: "FK Pairs Exist Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[2].references![0].pairs = [];
+    return s;
+  },
+  result: [false, "Failed FK Pairs Exist"],
+});
+
+testCases.push({
+  name: "FK Reference Table Exists Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s.reverse().pop();
+    return s;
+  },
+  result: [false, "Failed FK Reference Table Exists"],
+});
+
+testCases.push({
+  name: "FK Reference Column Exists Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns.reverse().pop();
+    s[0].pk = "";
+    return s;
+  },
+  result: [false, "Failed FK Reference Column Exists"],
+});
+
+testCases.push({
+  name: "FK Local Column Exists Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[2].columns.pop();
+    return s;
+  },
+  result: [false, "Failed FK Local Column Exists"],
+});
+
+testCases.push({
+  name: "FK Reference And Local Same Type Test",
+  schema: () => {
+    const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[0].type = "uuid";
+    return s;
+  },
+  result: [false, "Failed FK Pairs Have Matching Types"],
+});
+
+// Circular FKs
+testCases.push({
+  name: "Circular FK - 1: Pass",
+  schema: circularBaseCase,
+  result: [true, "Success!"],
+});
+
+testCases.push({
+  name: "Circular FK - 2: Circles",
+  schema: () => {
+    const s = cloneSchema(circularBaseCase);
+    s[0].references![0].pairs[0].away = "two";
+    return s;
+  },
+  result: [false, "Failed Cycle FKs"],
+});
+
+testCases.push({
+  name: "Weak Table - No PK Test",
+  schema: [
+    {
+      name: "sillytable",
+      columns: [
+        {
+          name: "Meow",
+          type: "text",
+        },
+      ],
+    },
+  ],
+  result: [true, "Success!"],
+});
+
+// make 10 columns named "col1"..."col10"
+const makeColumns = (n: number): Column[] =>
+  Array.from({ length: n }, (_, i) => ({
+    name: `col${i + 1}`,
+    type: "text" as const,
+  }));
+
+// make n tables, each with 10 columns
+const makeTables = (n: number, colsPerTable = 10): Table[] =>
+  Array.from({ length: n }, (_, i) => ({
+    name: `table_${i + 1}`,
+    columns: makeColumns(colsPerTable),
+  }));
+
+testCases.push({
+  name: "300 Tables, 10 Columns",
+  schema: makeTables(300, 10),
+  result: [true, "Success!"],
+});
 
 function validator(schema: Table[]): [boolean, string] {
   const instance = new Schema(schema);
@@ -161,55 +444,15 @@ function validator(schema: Table[]): [boolean, string] {
 }
 
 describe("Schema validator — Test Cases", () => {
-  test("Base schema 1", () => {
-    expect(validator(baseCaseSchemaOne)).toStrictEqual([true, "Success!"]);
-  });
-  test("Alternative Schema 1 - No Tables", () => {
-    expect(validator(altSchemaOne)).toStrictEqual([false, "Failed Tables Exist"]);
-  });
-  test("Alternative Schema 2 - Duplicate table names", () => {
-    expect(validator(altSchemaTwo)).toStrictEqual([false, "Failed No Duplicate Table Names"]);
-  });
-  test("Alternative Schema 3 - Table Name Rules (No Space)", () => {
-    expect(validator(altSchemaThree)).toStrictEqual([false, "Failed Table Names Rules"]);
-  });
-  test("Alternative Schema 4 - No Reserved Names (table)", () => {
-    expect(validator(altSchemaFour)).toStrictEqual([false, "Failed No Reserved Names Usage"]);
-  });
-  test("Alternative Schema 5 - No Reserved Names (column)", () => {
-    expect(validator(altSchemaFive)).toStrictEqual([false, "Failed No Reserved Names Usage"]);
-  });
-  test("Alternative Schema 6 - Column Types", () => {
-    expect(validator(altSchemaSix)).toStrictEqual([false, "Failed Column Types"]);
-  });
-  test("Alternative Schema 7 - Table has Columns", () => {
-    expect(validator(altSchemaSeven)).toStrictEqual([false, "Failed Table Has Columns"]);
-  });
-  test("Alternative Schema 8 - Duplicate Column Names", () => {
-    expect(validator(altSchemaEight)).toStrictEqual([false, "Failed No Duplicate Column Names"]);
-  });
-  test("Alternative Schema 9 - PK Exists", () => {
-    expect(validator(altSchemaNine)).toStrictEqual([false, "Failed PK Existence"]);
-  });
-  test("Alternative Schema 10 - Unique only in scalar columns", () => {
-    expect(validator(altSchemaTen)).toStrictEqual([false, "Failed Unique Only In Scalar Columns"]);
-  });
-  test("Alternative Schema 11 - FK Pairs must exist", () => {
-    expect(validator(altSchemaEleven)).toStrictEqual([false, "Failed FK Pairs Exist"]);
-  });
-  test("Alternative Schema 12 - Validate FK Reference Table Exists", () => {
-    expect(validator(altSchemaTwelve)).toStrictEqual([false, "Failed FK Reference Table Exists"]);
-  });
-  test("Alternative Schema 13 - Validate FK Reference Column Exists", () => {
-    expect(validator(altSchemaThirteen)).toStrictEqual([
-      false,
-      "Failed FK Reference Column Exists",
-    ]);
-  });
-  test("Alternative Schema 14 - FK Reference and Local Type should be the same", () => {
-    expect(validator(altSchemaFourteen)).toStrictEqual([
-      false,
-      "Failed FK Pairs Have Matching Types",
-    ]);
-  });
+  for (const testCase of testCases) {
+    test(testCase.name, () => {
+      // unwrap if the schema is a function
+      const schemaData =
+        typeof testCase.schema === "function"
+          ? (testCase.schema as () => Table[])()
+          : (testCase.schema as Table[]);
+
+      expect(validator(schemaData)).toStrictEqual(testCase.result);
+    });
+  }
 });

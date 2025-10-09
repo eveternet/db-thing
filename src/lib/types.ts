@@ -1,5 +1,5 @@
 export type DataType = "number" | "text" | "boolean" | "date" | "uuid" | "time" | "jsonb";
-export type Data = string | number | boolean;
+export type Data = string | number | boolean | object;
 
 export type Pair = {
   local: string;

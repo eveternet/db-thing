@@ -12,14 +12,13 @@ export class Schema {
     "jsonb",
     "time",
   ];
+  private nonScalarTypes: DataType[] = ["boolean", "date", "time"];
+
   constructor(schmea: Table[]) {
     this.tables = schmea;
   }
 
   public validateSchema(): [boolean, string] {
-    if (!this.validateNoReservedNamesUsage(this.tables)) {
-      return [false, "Failed No Reserved Names Usage"];
-    }
     if (!this.validateTablesExist(this.tables)) {
       return [false, "Failed Tables Exist"];
     }
@@ -30,23 +29,35 @@ export class Schema {
       if (!this.validateTableNameRules(table)) {
         return [false, "Failed Table Names Rules"];
       }
+      if (!this.validateTableHasColumns(table)) {
+        return [false, "Failed Table Has Columns"];
+      }
       if (!this.validateColumnTypes(table)) {
         return [false, "Failed Column Types"];
       }
-      if (!this.validateTableHasColumns(table)) {
-        return [false, "Failed Table Has Columns"];
+      if (!this.validateColumnNameRules(table)) {
+        return [false, "Failed Column Name Rules"];
       }
       if (!this.validateNoDuplicateColumnNames(table)) {
         return [false, "Failed No Duplicate Column Names"];
       }
       if (!this.validatePkExistence(table)) {
-        return [false, "Failed PK Existence"];
+        return [false, "Failed PK Reference"];
+      }
+      if (!this.validatePkIsScalable(table)) {
+        return [false, "Failed PK Scalable"];
+      }
+      if (!this.validateCompositePkExists(table)) {
+        return [false, "Failed Comp PK Test"];
+      }
+      if (!this.validateNoDuplicateInCompositePK(table)) {
+        return [false, "Failed No Duplicate in Composite PK"];
       }
       if (!this.validateUniqueOnlyInScalarColumns(table)) {
         return [false, "Failed Unique Only In Scalar Columns"];
       }
       if (!this.validateDefaultTypecheck(table)) {
-        return [false, "Default failed typecheck"];
+        return [false, "Failed default typecheck"];
       }
       if (table.references) {
         for (const reference of table.references) {
@@ -60,12 +71,18 @@ export class Schema {
             if (!this.validateFkReferenceColumnExists(pair, reference)) {
               return [false, "Failed FK Reference Column Exists"];
             }
+            if (!this.validateFkLocalColumnExists(pair, table)) {
+              return [false, "Failed FK Local Column Exists"];
+            }
             if (!this.validateFkPairsHaveMatchingTypes(pair, reference, table)) {
               return [false, "Failed FK Pairs Have Matching Types"];
             }
           }
         }
       }
+    }
+    if (!this.validateCycleFksBanned(this.tables)) {
+      return [false, "Failed Cycle FKs"];
     }
     return [true, "Success!"];
   }
@@ -86,25 +103,8 @@ export class Schema {
   }
 
   private validateTableNameRules(table: Table): boolean {
-    if (table.name.includes(" ")) {
-      return false;
-    }
-    return true;
-  }
-
-  private validateNoReservedNamesUsage(tables: Table[]): boolean {
-    let reservedNames = ["_pk", "_table"]; // I forgot the rest
-    for (const table of this.tables) {
-      if (reservedNames.includes(table.name)) {
-        return false;
-      }
-      for (const column of table.columns) {
-        if (reservedNames.includes(column.name)) {
-          return false;
-        }
-      }
-    }
-    return true;
+    const namePattern = /^[A-Za-z][A-Za-z0-9_]*$/;
+    return namePattern.test(table.name);
   }
 
   private validateColumnTypes(table: Table): boolean {
@@ -119,6 +119,18 @@ export class Schema {
   private validateTableHasColumns(table: Table): boolean {
     if (table.columns.length === 0) {
       return false;
+    }
+    return true;
+  }
+
+  private validateColumnNameRules(table: Table): boolean {
+    for (const column of table.columns) {
+      const namePattern = /^[A-Za-z][A-Za-z0-9_]*$/;
+      if (namePattern.test(column.name)) {
+        continue;
+      } else {
+        return false;
+      }
     }
     return true;
   }
@@ -149,10 +161,50 @@ export class Schema {
     return true;
   }
 
+  private validateCompositePkExists(table: Table): boolean {
+    if (table.pk) {
+      if (typeof table.pk === "object") {
+        if (table.pk.length === 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private validatePkIsScalable(table: Table): boolean {
+    if (!table.pk) return true;
+
+    const check = (colName: string): boolean => {
+      const idx = table.columns.findIndex((c) => c.name === colName);
+      if (idx === -1) return true; // column doesn't exist; other validator will catch
+      const colType = table.columns[idx].type;
+      return !this.nonScalarTypes.includes(colType);
+    };
+
+    if (Array.isArray(table.pk)) {
+      for (const col of table.pk) {
+        if (!check(col)) return false;
+      }
+    } else {
+      if (!check(table.pk)) return false;
+    }
+
+    return true;
+  }
+
+  private validateNoDuplicateInCompositePK(table: Table): boolean {
+    if (table.pk) {
+      if (typeof table.pk === "object") {
+        if (new Set(table.pk).size !== table.pk.length) return false;
+      }
+    }
+    return true;
+  }
+
   private validateUniqueOnlyInScalarColumns(table: Table): boolean {
-    let nonScalarTypes: DataType[] = ["boolean", "date", "time"];
     for (const column of table.columns) {
-      if (column.unique && nonScalarTypes.includes(column.type)) {
+      if (column.unique && this.nonScalarTypes.includes(column.type)) {
         return false;
       }
     }
@@ -209,6 +261,14 @@ export class Schema {
     return true;
   }
 
+  private validateFkLocalColumnExists(pair: Pair, table: Table): boolean {
+    let localColumnNameList = table.columns.map((column) => column.name);
+    if (!localColumnNameList.includes(pair.local)) {
+      return false;
+    }
+    return true;
+  }
+
   private validateFkPairsHaveMatchingTypes(
     pair: Pair,
     reference: ForeignKey,
@@ -228,6 +288,29 @@ export class Schema {
 
     if (localColumnType !== awayColumnType) {
       return false;
+    }
+    return true;
+  }
+
+  private validateCycleFksBanned(tables: Table[]): Boolean {
+    // Step 1: Nab all records using an ungodly amount of map
+    const localColumns: Set<string> = new Set(
+      tables.flatMap((t) =>
+        (t.references ?? []).flatMap((ref) => ref.pairs.map((p) => `${t.name}.${p.local}`)),
+      ),
+    );
+    for (const table of tables) {
+      if (table.references) {
+        for (const reference of table.references) {
+          for (const pair of reference.pairs) {
+            let awayPair = `${reference.targetTable}.${pair.away}`;
+
+            if (localColumns.has(awayPair)) {
+              return false;
+            }
+          }
+        }
+      }
     }
     return true;
   }

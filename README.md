@@ -14,7 +14,7 @@ While that is the core idea of this project, I also threw in a few of my own ide
 
 ## Next steps for DB-Thing:
 
-- [ ] Deeper testing for `Schema.validateSchema()` -- Current tests only indicate this works for base cases
+- [x] Deeper testing for `Schema.validateSchema()` -- Current tests only indicate this works for base cases
 - [ ] Creating migrations for the schema and creating files for the DBMS to read and write
 - [ ] Creating secondary indexes to allow the faster read of data
 - [ ] Creating integrity systems to ensure both the main and secondary indexes are accurate
