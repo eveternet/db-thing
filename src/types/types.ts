@@ -1,6 +1,18 @@
 export type DataType = "number" | "text" | "boolean" | "date" | "uuid" | "time" | "jsonb";
 export type Data = string | number | boolean | object;
 
+export const default_data_types: DataType[] = [
+  "number",
+  "text",
+  "boolean",
+  "date",
+  "uuid",
+  "jsonb",
+  "time",
+];
+
+export const non_scalar_types: DataType[] = ["boolean", "date", "time"];
+
 export type Pair = {
   local: string;
   away: string;

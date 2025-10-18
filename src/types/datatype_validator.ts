@@ -1,5 +1,5 @@
 // Purpose of this file is to do a validation on each of the db-thing data types
-import { DataType, Data } from "@/types";
+import { DataType, Data } from "@/types/types";
 
 export function validateType(type: DataType, value: Data): boolean {
   switch (type) {
