@@ -34,14 +34,18 @@ export const validateReferences = (tables: Table[], table: Table): ValidationRes
   return [true, ""];
 };
 
-const fkPairsExist = (reference: ForeignKey): boolean => reference.pairs.length > 0;
+export const fkPairsExist = (reference: ForeignKey): boolean => reference.pairs.length > 0;
 
-const fkReferenceTableExists = (reference: ForeignKey, tables: Table[]): boolean => {
+export const fkReferenceTableExists = (reference: ForeignKey, tables: Table[]): boolean => {
   const tableNames = tables.map((table) => table.name);
   return tableNames.includes(reference.targetTable);
 };
 
-const fkReferenceColumnExists = (pair: Pair, reference: ForeignKey, tables: Table[]): boolean => {
+export const fkReferenceColumnExists = (
+  pair: Pair,
+  reference: ForeignKey,
+  tables: Table[],
+): boolean => {
   const tableNames = tables.map((table) => table.name);
   const indexOf = tableNames.indexOf(reference.targetTable);
   if (indexOf === -1) return false;
@@ -56,12 +60,12 @@ const fkReferenceColumnExists = (pair: Pair, reference: ForeignKey, tables: Tabl
   return true;
 };
 
-const fkLocalColumnExists = (pair: Pair, table: Table): boolean => {
+export const fkLocalColumnExists = (pair: Pair, table: Table): boolean => {
   const localColumnNameList = table.columns.map((column) => column.name);
   return localColumnNameList.includes(pair.local);
 };
 
-const fkPairsHaveMatchingTypes = (
+export const fkPairsHaveMatchingTypes = (
   pair: Pair,
   reference: ForeignKey,
   table: Table,

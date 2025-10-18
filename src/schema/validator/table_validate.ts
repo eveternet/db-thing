@@ -28,21 +28,21 @@ export const validateTables = (tables: Table[]): ValidationResult => {
   return [true, ""];
 };
 
-const tablesExist = (tables: Table[]): boolean => tables.length > 0;
+export const tablesExist = (tables: Table[]): boolean => tables.length > 0;
 
-const noDuplicateTableNames = (tables: Table[]): boolean => {
+export const noDuplicateTableNames = (tables: Table[]): boolean => {
   const tableNames = tables.map((table) => table.name);
   return new Set(tableNames).size === tableNames.length;
 };
 
-const tableNameRules = (table: Table): boolean => {
+export const tableNameRules = (table: Table): boolean => {
   const namePattern = /^[A-Za-z][A-Za-z0-9_]*$/;
   return namePattern.test(table.name);
 };
 
-const tableHasColumns = (table: Table): boolean => table.columns.length > 0;
+export const tableHasColumns = (table: Table): boolean => table.columns.length > 0;
 
-const cycleFksBanned = (tables: Table[]): boolean => {
+export const cycleFksBanned = (tables: Table[]): boolean => {
   const localColumns = new Set(
     tables.flatMap((table) =>
       (table.references ?? []).flatMap((reference) =>

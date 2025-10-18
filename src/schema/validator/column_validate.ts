@@ -43,20 +43,20 @@ export const validateColumns = (table: Table): ValidationResult => {
   return [true, ""];
 };
 
-const columnTypesValid = (table: Table): boolean =>
+export const columnTypesValid = (table: Table): boolean =>
   table.columns.every((column) => default_data_types.includes(column.type));
 
-const columnNameRules = (table: Table): boolean => {
+export const columnNameRules = (table: Table): boolean => {
   const namePattern = /^[A-Za-z][A-Za-z0-9_]*$/;
   return table.columns.every((column) => namePattern.test(column.name));
 };
 
-const noDuplicateColumnNames = (table: Table): boolean => {
+export const noDuplicateColumnNames = (table: Table): boolean => {
   const columnNames = table.columns.map((column) => column.name);
   return new Set(columnNames).size === columnNames.length;
 };
 
-const primaryKeyExists = (table: Table): boolean => {
+export const primaryKeyExists = (table: Table): boolean => {
   const columnNames = table.columns.map((column) => column.name);
   if (!table.pk) return true;
 
@@ -67,7 +67,7 @@ const primaryKeyExists = (table: Table): boolean => {
   return table.pk.every((key) => columnNames.includes(key));
 };
 
-const primaryKeyIsScalar = (table: Table): boolean => {
+export const primaryKeyIsScalar = (table: Table): boolean => {
   if (!table.pk) return true;
 
   const isScalar = (colName: string): boolean => {
@@ -83,24 +83,24 @@ const primaryKeyIsScalar = (table: Table): boolean => {
   return isScalar(table.pk);
 };
 
-const compositePrimaryKeyExists = (table: Table): boolean => {
+export const compositePrimaryKeyExists = (table: Table): boolean => {
   if (!table.pk) return true;
   if (typeof table.pk === "string") return true;
 
   return table.pk.length > 0;
 };
 
-const noDuplicateInCompositePrimaryKey = (table: Table): boolean => {
+export const noDuplicateInCompositePrimaryKey = (table: Table): boolean => {
   if (!table.pk) return true;
   if (typeof table.pk === "string") return true;
 
   return new Set(table.pk).size === table.pk.length;
 };
 
-const uniqueOnlyInScalarColumns = (table: Table): boolean =>
+export const uniqueOnlyInScalarColumns = (table: Table): boolean =>
   table.columns.every((column) => !(column.unique && non_scalar_types.includes(column.type)));
 
-const defaultTypecheck = (table: Table): boolean => {
+export const defaultTypecheck = (table: Table): boolean => {
   for (const column of table.columns) {
     if (!("default" in column) || column.default === undefined) {
       continue;
