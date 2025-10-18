@@ -95,7 +95,7 @@ export class Schema {
   }
 
   private validateNoDuplicateTableNames(tables: Table[]): boolean {
-    let tableNames: string[] = this.tables.map((table) => table.name);
+    const tableNames: string[] = this.tables.map((table) => table.name);
     if (new Set(tableNames).size !== tableNames.length) {
       return false;
     }
@@ -136,7 +136,7 @@ export class Schema {
   }
 
   private validateNoDuplicateColumnNames(table: Table): boolean {
-    let columnsName = table.columns.map((column) => column.name);
+    const columnsName = table.columns.map((column) => column.name);
     if (new Set(columnsName).size !== columnsName.length) {
       return false;
     }
@@ -144,7 +144,7 @@ export class Schema {
   }
 
   private validatePkExistence(table: Table): boolean {
-    let columnsName = table.columns.map((column) => column.name);
+    const columnsName = table.columns.map((column) => column.name);
     if (table.pk) {
       if (typeof table.pk === "string") {
         if (!columnsName.includes(table.pk)) {
@@ -240,7 +240,7 @@ export class Schema {
   }
 
   private validateFkReferenceTableExists(reference: ForeignKey): boolean {
-    let tableNames: string[] = this.tables.map((table) => table.name);
+    const tableNames: string[] = this.tables.map((table) => table.name);
     if (!tableNames.includes(reference.targetTable)) {
       return false;
     }
@@ -248,10 +248,10 @@ export class Schema {
   }
 
   private validateFkReferenceColumnExists(pair: Pair, reference: ForeignKey): boolean {
-    let tableNames: string[] = this.tables.map((table) => table.name);
-    let indexOf = tableNames.indexOf(reference.targetTable);
-    let referencingTable = this.tables[indexOf];
-    let columnNamesOfReferencedTable = referencingTable.columns.map((column) => column.name);
+    const tableNames: string[] = this.tables.map((table) => table.name);
+    const indexOf = tableNames.indexOf(reference.targetTable);
+    const referencingTable = this.tables[indexOf];
+    const columnNamesOfReferencedTable = referencingTable.columns.map((column) => column.name);
 
     if (typeof pair.away === "string") {
       if (!columnNamesOfReferencedTable.includes(pair.away)) {
@@ -262,7 +262,7 @@ export class Schema {
   }
 
   private validateFkLocalColumnExists(pair: Pair, table: Table): boolean {
-    let localColumnNameList = table.columns.map((column) => column.name);
+    const localColumnNameList = table.columns.map((column) => column.name);
     if (!localColumnNameList.includes(pair.local)) {
       return false;
     }
@@ -274,17 +274,17 @@ export class Schema {
     reference: ForeignKey,
     table: Table,
   ): boolean {
-    let tableNames: string[] = this.tables.map((table) => table.name);
-    let indexOf = tableNames.indexOf(reference.targetTable);
-    let referencingTable = this.tables[indexOf];
-    let columnNamesOfReferencedTable = referencingTable.columns.map((column) => column.name);
+    const tableNames: string[] = this.tables.map((table) => table.name);
+    const indexOf = tableNames.indexOf(reference.targetTable);
+    const referencingTable = this.tables[indexOf];
+    const columnNamesOfReferencedTable = referencingTable.columns.map((column) => column.name);
 
-    let indexOfLocalColumns = table.columns.map((column) => column.name).indexOf(pair.local);
-    let localColumnType = table.columns[indexOfLocalColumns].type;
+    const indexOfLocalColumns = table.columns.map((column) => column.name).indexOf(pair.local);
+    const localColumnType = table.columns[indexOfLocalColumns].type;
 
     // Get the type of away column
-    let indexOfAwayColumns = columnNamesOfReferencedTable.indexOf(pair.away);
-    let awayColumnType = referencingTable.columns[indexOfAwayColumns].type;
+    const indexOfAwayColumns = columnNamesOfReferencedTable.indexOf(pair.away);
+    const awayColumnType = referencingTable.columns[indexOfAwayColumns].type;
 
     if (localColumnType !== awayColumnType) {
       return false;
@@ -303,7 +303,7 @@ export class Schema {
       if (table.references) {
         for (const reference of table.references) {
           for (const pair of reference.pairs) {
-            let awayPair = `${reference.targetTable}.${pair.away}`;
+            const awayPair = `${reference.targetTable}.${pair.away}`;
 
             if (localColumns.has(awayPair)) {
               return false;
