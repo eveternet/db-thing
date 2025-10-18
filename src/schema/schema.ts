@@ -1,5 +1,5 @@
-import { DataType, Table, ForeignKey, Pair } from "../types";
-import { validateType } from "../datatype_validator";
+import { DataType, Table, ForeignKey, Pair } from "@/types";
+import { validateType } from "@/datatype_validator";
 
 export class Schema {
   private tables: Table[];

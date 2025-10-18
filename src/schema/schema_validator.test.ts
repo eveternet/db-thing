@@ -1,6 +1,6 @@
-import { describe, test, expect } from "vitest";
-import { Schema } from "./schema";
-import { Table, Column } from "../types";
+import { describe, test, expect } from "bun:test";
+import { Schema } from "@/schema/schema";
+import { Table, Column } from "@/types";
 
 // Base Case Schemas: Tests all pass
 
