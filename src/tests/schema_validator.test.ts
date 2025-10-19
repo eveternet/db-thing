@@ -179,7 +179,7 @@ type testCase = {
   result: [boolean, string];
 };
 
-let testCases: testCase[] = [];
+const testCases: testCase[] = [];
 
 testCases.push({
   name: "Base Case",
