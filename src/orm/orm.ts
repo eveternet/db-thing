@@ -14,7 +14,7 @@ import {
 // functions to build DB operations in JSON form. Each function represents
 // an action (select, update, etc.), not a string of SQL.
 
-export class database {
+export class orm {
   private link_to_db_system: string;
   private instructions: Database_Operation[];
 
