@@ -53,11 +53,7 @@ export const fkReferenceColumnExists = (
   const referencingTable = tables[indexOf];
   const columnNamesOfReferencedTable = referencingTable.columns.map((column) => column.name);
 
-  if (typeof pair.away === "string") {
-    return columnNamesOfReferencedTable.includes(pair.away);
-  }
-
-  return true;
+  return columnNamesOfReferencedTable.includes(pair.away);
 };
 
 export const fkLocalColumnExists = (pair: Pair, table: Table): boolean => {

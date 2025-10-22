@@ -114,8 +114,12 @@ export class orm {
     return op;
   }
 
-  public delete(table: string, data: object): Database_Operation {
-    const op: Database_Operation = { operation: "DELETE", table };
+  public delete(table: string, where?: ConditionNode): Database_Operation {
+    const op: Database_Operation = {
+      operation: "DELETE",
+      table,
+      ...(where && { conditions: where }),
+    };
     this.instructions.push(op);
     return op;
   }

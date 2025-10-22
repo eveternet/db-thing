@@ -29,12 +29,8 @@ export function validateType(type: DataType, value: Data): boolean {
       }
     case "uuid":
       const uuidV4Regex =
-        /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b/;
-      if (typeof value === "string" && !uuidV4Regex.test(value)) {
-        return true;
-      } else {
-        return false;
-      }
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+      return typeof value === "string" && uuidV4Regex.test(value);
     case "date":
       if (typeof value === "string") {
         const validDateRegex = new RegExp(
