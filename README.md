@@ -24,8 +24,8 @@ While that is the core idea of this project, I also threw in a few of my own ide
 ## To run what exists (why would you)
 
 1. Clone the project
-2. Do `pnpm install` (we have like 1 non-base next dependecy)
-3. Do `pnpm test` or `pnpm test --watch` to run my 1 test file and see a all tests pass
+2. Do `bun install` (we have like 1 non-base next dependecy)
+3. Do `bun test` or to run my 1 test file and see a all tests pass
 
 ## License (is this how a readme is supposed to flow?)
 
