@@ -1,5 +1,2 @@
 [loader]
 ".ts" = "ts"
-
-[alias]
-"@" = "./src"

@@ -1,26 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
-    "lib": ["esnext"],
-    "baseUrl": ".",
-    "allowJs": true,
-    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
-    "ignoreDeprecations": "6.0",
-    "noEmit": false,
+    "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "types": ["node"],
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "types": ["bun-types"],
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/tests", "src/env.d.ts", "node_modules", "dist"]
 }

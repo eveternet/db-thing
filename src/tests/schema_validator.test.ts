@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { Schema } from "@/schema/schema";
-import { Table, Column } from "@/types/types";
+import { Schema } from "../schema/schema.js";
+import { Table, Column } from "../types/types.js";
 
 // Base Case Schemas: Tests all pass
 
@@ -96,6 +96,7 @@ const baseCaseSchemaOne: Table[] = [
 const circularBaseCase: Table[] = [
   {
     name: "table1",
+    pk: "one",
     columns: [
       {
         name: "one",
@@ -120,6 +121,7 @@ const circularBaseCase: Table[] = [
   },
   {
     name: "table2",
+    pk: "one",
     columns: [
       {
         name: "one",
@@ -144,6 +146,7 @@ const circularBaseCase: Table[] = [
   },
   {
     name: "table3",
+    pk: "one",
     columns: [
       {
         name: "one",
@@ -288,7 +291,7 @@ testCases.push({
   name: "PK is using Scalar Values Test",
   schema: () => {
     const s = cloneSchema(baseCaseSchemaOne);
-    s[0].columns[0].type = "boolean";
+    s[0].columns[0].type = "jsonb";
     return s;
   },
   result: [false, "Failed PK Scalable"],
@@ -318,6 +321,7 @@ testCases.push({
   name: "Unique Scalable Test",
   schema: () => {
     const s = cloneSchema(baseCaseSchemaOne);
+    s[0].columns[3].type = "jsonb";
     s[0].columns[3].unique = true;
     return s;
   },
@@ -393,13 +397,13 @@ testCases.push({
 });
 
 testCases.push({
-  name: "Circular FK - 2: Circles",
+  name: "Circular FK - 2: Non-unique target",
   schema: () => {
     const s = cloneSchema(circularBaseCase);
     s[0].references![0].pairs[0].away = "two";
     return s;
   },
-  result: [false, "Failed Cycle FKs"],
+  result: [false, "Foreign key must reference a primary or unique key in declared order"],
 });
 
 testCases.push({

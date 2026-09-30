@@ -1,80 +1,47 @@
-// Purpose of this file is to do a validation on each of the db-thing data types
-import { DataType, Data } from "@/types/types";
+import type { DataType, Data } from "./types.js";
+import { assertJson } from "../dbms/value.js";
 
 export function validateType(type: DataType, value: Data): boolean {
   switch (type) {
     case "boolean":
-      if (typeof value === "boolean") {
-        return true;
-      } else {
-        return false;
-      }
+      return typeof value === "boolean";
     case "number":
-      if (typeof value === "number") {
-        return true;
-      } else {
-        return false;
-      }
+      return typeof value === "number" && Number.isFinite(value);
     case "text":
-      if (typeof value === "string") {
-        return true;
-      } else {
-        return false;
-      }
+      return typeof value === "string";
     case "jsonb":
-      if (typeof value === "object") {
+      if (value === null || typeof value !== "object") return false;
+      try {
+        assertJson(value);
         return true;
-      } else {
+      } catch {
         return false;
       }
     case "uuid":
-      const uuidV4Regex =
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-      return typeof value === "string" && uuidV4Regex.test(value);
-    case "date":
-      if (typeof value === "string") {
-        const validDateRegex = new RegExp(
-          "^" +
-            "(?:" +
-            "(?:\\d{4})" + // YYYY
-            "(?:" +
-            "(?:0[1-9]|1[0-2])" + // MM (01–12)
-            "(?:" +
-            "(?:0[1-9]|[12]\\d|3[01])" + // DD (01–31)
-            "(?:" +
-            "(?:[01]\\d|2[0-3])" + // hh (00–23)
-            "(?:" +
-            "[0-5]\\d" + // mm (00–59)
-            "(?:" +
-            "[0-5]\\d(?:\\.\\d+)?" + // ss (00–59, optional decimal)
-            ")?" +
-            ")?" +
-            ")?" +
-            ")?" +
-            ")?" +
-            ")$",
-        );
-        return validDateRegex.test(value);
-      } else {
+      return (
+        typeof value === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+      );
+    case "date": {
+      if (
+        typeof value !== "string" ||
+        !/^\d{4}(?:(?:0[1-9]|1[0-2])(?:(?:0[1-9]|[12]\d|3[01])(?:(?:[01]\d|2[0-3])(?:[0-5]\d(?:[0-5]\d(?:\.\d+)?)?)?)?)?)?$/.test(
+          value,
+        )
+      )
         return false;
-      }
+      if (value.length < 8) return true;
+      const year = Number(value.slice(0, 4)),
+        month = Number(value.slice(4, 6)),
+        day = Number(value.slice(6, 8));
+      const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+      return day <= [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+    }
     case "time":
-      if (typeof value === "string") {
-        const validTimeRegex = new RegExp(
-          "^" +
-            "(?:[01]\\d|2[0-3])" + // hours 00–23
-            "(?:" +
-            "[0-5]\\d" + // minutes 00–59
-            "(?:" +
-            "[0-5]\\d(?:\\.\\d+)?" + // seconds 00–59 + optional fraction
-            ")?" +
-            ")?" +
-            "$",
-        );
-        return validTimeRegex.test(value);
-      } else {
-        return false;
-      }
+      return (
+        typeof value === "string" &&
+        /^(?:[01]\d|2[0-3])(?:[0-5]\d(?:[0-5]\d(?:\.\d+)?)?)?$/.test(value)
+      );
     default:
       return false;
   }
