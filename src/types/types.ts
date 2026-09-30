@@ -17,7 +17,7 @@ export const default_data_types: DataType[] = [
   "uuid",
 ];
 
-export const non_scalar_types: DataType[] = ["boolean", "date", "time"];
+export const non_scalar_types: DataType[] = ["jsonb"];
 
 // -----------------------------------------------------------------------------
 // Schema Definitions
@@ -49,7 +49,34 @@ export type Table = {
   pk?: string | string[];
   references?: ForeignKey[];
   metadata?: Record<string, unknown>;
+  indexes?: IndexDefinition[];
+  checks?: ConditionNode[];
 };
+
+export type IndexDefinition = { name: string; columns: string[]; unique?: boolean };
+export type Row = Record<string, Data>;
+type PrimaryColumns<T extends Table> = T["pk"] extends string
+  ? T["pk"]
+  : T["pk"] extends string[]
+    ? T["pk"][number]
+    : never;
+export type InferRow<T extends Table> = string extends T["name"]
+  ? Row
+  : {
+      [C in T["columns"][number] as C["name"]]:
+        | (C["type"] extends "number"
+            ? number
+            : C["type"] extends "boolean"
+              ? boolean
+              : C["type"] extends "jsonb"
+                ? Record<string, unknown> | unknown[]
+                : string)
+        | (C extends { notNull: true }
+            ? never
+            : C["name"] extends PrimaryColumns<T>
+              ? never
+              : null);
+    };
 
 // -----------------------------------------------------------------------------
 // Condition Tree (WHERE clause representation)
@@ -93,7 +120,8 @@ export type ConditionNode =
   | Comparison_In
   | Comparison_Between
   | Logical_Comparison_And_Or
-  | Logical_Comparison_Not;
+  | Logical_Comparison_Not
+  | { type: "comparison"; column: string; operator: "IS NULL" | "IS NOT NULL" };
 
 // -----------------------------------------------------------------------------
 // Common Utility Types
@@ -113,6 +141,10 @@ type Select_Function = {
   columns: string[];
   table: string;
   conditions?: ConditionNode;
+  orderBy?: { column: string; direction?: "asc" | "desc" }[];
+  limit?: number;
+  offset?: number;
+  distinct?: boolean;
 };
 
 type Update_Function = {

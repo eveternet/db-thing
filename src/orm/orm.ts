@@ -1,4 +1,5 @@
-import Database from "bun:sqlite";
+import { Database } from "../dbms/dbms.js";
+import { clone } from "../dbms/value.js";
 import {
   Database_Operation,
   Data,
@@ -8,7 +9,7 @@ import {
   Alter_Shenanigans,
   Column,
   DataType,
-} from "@/types/types";
+} from "../types/types.js";
 
 // Main purpose of this file: Take in a file system directory and provide
 // functions to build DB operations in JSON form. Each function represents
@@ -18,9 +19,41 @@ export class orm {
   private link_to_db_system: string;
   private instructions: Database_Operation[];
 
-  constructor(link_to_db_system: string) {
+  constructor(
+    link_to_db_system: string,
+    private schema?: Table[],
+  ) {
     this.link_to_db_system = link_to_db_system;
     this.instructions = [];
+  }
+
+  /** Execute the queued operations as one transaction, clearing the queue on success. */
+  public run(): ReturnType<Database["executeBatch"]> {
+    if (!this.instructions.length) return [];
+    const db = new Database({ directory: this.link_to_db_system, schema: this.schema });
+    try {
+      const result = db.executeBatch(clone(this.instructions));
+      this.instructions = [];
+      return result;
+    } finally {
+      db.close();
+    }
+  }
+
+  public pending(): Database_Operation[] {
+    return clone(this.instructions);
+  }
+  public clear(): void {
+    this.instructions = [];
+  }
+  public in(column: string, value: Data[]): ConditionNode {
+    return { type: "comparison", column, operator: "IN", value };
+  }
+  public is_null(column: string): ConditionNode {
+    return { type: "comparison", column, operator: "IS NULL" };
+  }
+  public is_not_null(column: string): ConditionNode {
+    return { type: "comparison", column, operator: "IS NOT NULL" };
   }
 
   // ---------------------------------------------------------------------------

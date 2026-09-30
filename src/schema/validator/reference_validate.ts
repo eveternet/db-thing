@@ -1,4 +1,4 @@
-import type { ForeignKey, Pair, Table } from "@/types/types";
+import type { ForeignKey, Pair, Table } from "../../types/types.js";
 
 type ValidationResult = [boolean, string];
 

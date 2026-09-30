@@ -1,5 +1,5 @@
-import { validateType } from "@/types/datatype_validator";
-import { Table, default_data_types, non_scalar_types } from "@/types/types";
+import { validateType } from "../../types/datatype_validator.js";
+import { Table, default_data_types, non_scalar_types } from "../../types/types.js";
 
 type ValidationResult = [boolean, string];
 
@@ -106,21 +106,12 @@ export const defaultTypecheck = (table: Table): boolean => {
       continue;
     }
 
-    if (column.type === "uuid") {
-      if (typeof column.default === "boolean") {
-        return true;
-      }
-
-      if (typeof column.default === "number") {
-        return false;
-      }
-
-      if (!validateType("uuid", column.default)) {
-        return false;
-      }
-    } else if (!validateType(column.type, column.default)) {
-      return false;
+    if (column.default === null) {
+      if (column.notNull) return false;
+      continue;
     }
+
+    if (!validateType(column.type, column.default)) return false;
   }
 
   return true;

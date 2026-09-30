@@ -1,4 +1,4 @@
-import { Table } from "@/types/types";
+import { Table } from "../../types/types.js";
 
 type ValidationResult = [boolean, string];
 
@@ -21,10 +21,6 @@ export const validateTables = (tables: Table[]): ValidationResult => {
     }
   }
 
-  if (!cycleFksBanned(tables)) {
-    return [false, "Failed Cycle FKs"];
-  }
-
   return [true, ""];
 };
 
@@ -41,26 +37,3 @@ export const tableNameRules = (table: Table): boolean => {
 };
 
 export const tableHasColumns = (table: Table): boolean => table.columns.length > 0;
-
-export const cycleFksBanned = (tables: Table[]): boolean => {
-  const localColumns = new Set(
-    tables.flatMap((table) =>
-      (table.references ?? []).flatMap((reference) =>
-        reference.pairs.map((pair) => `${table.name}.${pair.local}`),
-      ),
-    ),
-  );
-
-  for (const table of tables) {
-    for (const reference of table.references ?? []) {
-      for (const pair of reference.pairs) {
-        const awayPair = `${reference.targetTable}.${pair.away}`;
-        if (localColumns.has(awayPair)) {
-          return false;
-        }
-      }
-    }
-  }
-
-  return true;
-};

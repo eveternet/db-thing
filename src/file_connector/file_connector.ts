@@ -9,7 +9,7 @@ export abstract class FileConnector {
     fn: (dirPath: string) => Promise<T> | T,
   ): Promise<T>;
 
-  static registry: Record<string, new () => FileConnector> = {};
+  static registry: Record<string, new () => FileConnector> = Object.create(null);
 
   static register(key: string, ctor: new () => FileConnector) {
     this.registry[key] = ctor;
